@@ -129,11 +129,11 @@ This is **Rodrigues' rotation formula**.
 
 The trace satisfies
 
-$$\operatorname{tr}(R) = 1 + 2\cos\theta$$
+$$\text{tr}(R) = 1 + 2\cos\theta$$
 
 Therefore
 
-$$\theta = \arccos\left( \frac{\operatorname{tr}(R) - 1}{2} \right)$$
+$$\theta = \arccos\left( \frac{\text{tr}(R) - 1}{2} \right)$$
 
 The antisymmetric part gives
 
