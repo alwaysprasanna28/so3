@@ -1,485 +1,348 @@
 # SO(3) Module
 
-A lightweight Python implementation of the Lie group **SO(3)** and its Lie algebra **𝔰𝔬(3)**, implemented from first principles.
-
-The goal of this project is **to derive the mathematics before writing the code**. Rather than copying Rodrigues' formula or the logarithm map from a textbook, each implementation follows directly from the matrix exponential and the algebraic properties of skew-symmetric matrices.
-
----
+A minimal implementation of the Lie group **SO(3)** in Python, implemented from first principles rather than copied formulas.
 
 ## Features
 
-- `hat(w)` — map from ℝ³ → 𝔰𝔬(3)
-- `vee(K)` — inverse map 𝔰𝔬(3) → ℝ³
-- `exp_so3(w)` — exponential map (Rodrigues' formula)
-- `log_so3(R)` — logarithm map
-- Numerical small-angle handling
-- Pytest unit tests
+- `hat(w)` : $\mathbb{R}^3 \rightarrow \mathfrak{so}(3)$
+- `vee(K)` : $\mathfrak{so}(3) \rightarrow \mathbb{R}^3$
+- `exp_so3(w)` using Rodrigues' formula
+- `log_so3(R)` using the matrix logarithm
+- Small-angle Taylor approximations
+- PyTest test suite
 - Validation against SciPy
 
 ---
 
-## Repository Structure
+# Repository Structure
 
 ```text
 so3/
-├── so3.py             # hat, vee, exp_so3, log_so3
-├── test_so3.py        # pytest tests
+├── so3.py
+├── test_so3.py
 ├── requirements.txt
 └── README.md
 ```
 
-Each function was implemented independently and committed only after all associated tests passed.
+---
+
+# Installation
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+or with uv
+
+```bash
+uv venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
+```
 
 ---
 
 # Mathematical Background
 
-SO(3) is the Lie group of 3D rotation matrices,
+SO(3) is the set of rotation matrices
 
-\[
+$$
 SO(3)=
-\{R\in\mathbb{R}^{3\times3}\mid
+\left\{
+R\in\mathbb{R}^{3\times3}
+\mid
 RR^T=I,\;
 \det(R)=1
-\}
-\]
+\right\}.
+$$
 
-Its Lie algebra is the set of skew-symmetric matrices,
+Its Lie algebra is
 
-\[
+$$
 \mathfrak{so}(3)=
-\{
+\left\{
 K\in\mathbb{R}^{3\times3}
 \mid
 K^T=-K
-\}
-\]
-
-The exponential map connects the Lie algebra to the Lie group,
-
-\[
-R=\exp(K).
-\]
+\right\}.
+$$
 
 ---
 
-# 1. Hat and Vee Operators
+# Hat Operator
 
-The **hat operator** converts a vector into its skew-symmetric matrix,
+The hat operator converts a vector into a skew-symmetric matrix.
 
-\[
+Given
+
+$$
 \omega=
 \begin{bmatrix}
 \omega_x\\
 \omega_y\\
 \omega_z
-\end{bmatrix}
-\]
+\end{bmatrix},
+$$
 
-\[
-[\omega]_\times=
-\hat\omega=
+define
+
+$$
+\hat{\omega}=
 \begin{bmatrix}
 0 & -\omega_z & \omega_y\\
 \omega_z & 0 & -\omega_x\\
 -\omega_y & \omega_x & 0
 \end{bmatrix}.
-\]
+$$
 
 It satisfies
 
-\[
-\hat\omega x
-=
-\omega\times x
-\]
+$$
+\hat{\omega}x=\omega\times x.
+$$
 
-for every vector \(x\).
+The inverse map is
 
-The inverse mapping is the **vee operator**
-
-\[
-\mathrm{vee}(\hat\omega)=\omega.
-\]
-
----
+$$
+\mathrm{vee}(\hat{\omega})=\omega.
+$$
 
 ## Tests
 
-- `vee(hat(w)) == w`
-- `hat(w) == -hat(w).T`
+```python
+assert np.allclose(vee(hat(w)), w)
+assert np.allclose(hat(w), -hat(w).T)
+```
 
 ---
 
-# 2. Exponential Map
+# Exponential Map
 
-We begin from the matrix exponential,
+We begin with the matrix exponential
 
-\[
+$$
 R
 =
 \exp(K)
 =
 \sum_{k=0}^{\infty}
 \frac{K^k}{k!},
-\]
+$$
 
 where
 
-\[
-K=[\omega]_\times,
+$$
+K=\hat{\omega},
 \qquad
 \theta=\|\omega\|.
-\]
-
-Computing infinitely many powers directly is impractical.
-
-The key observation is that powers of a skew-symmetric matrix are **not independent**.
+$$
 
 ---
 
-## Computing \(K^2\)
+## Step 1
 
 Using
 
-\[
+$$
 \omega\times(\omega\times x)
 =
 \omega(\omega\cdot x)
 -
 x(\omega\cdot\omega),
-\]
+$$
 
 we obtain
 
-\[
+$$
 K^2
 =
 \omega\omega^T
 -
 \theta^2I.
-\]
+$$
 
 ---
 
-## Computing \(K^3\)
+## Step 2
 
-\[
+Then
+
+$$
 K^3
 =
-K(\omega\omega^T-\theta^2I)
-=
-(K\omega)\omega^T
--
-\theta^2K.
-\]
+K(\omega\omega^T-\theta^2I).
+$$
 
 Since
 
-\[
+$$
 K\omega
 =
 \omega\times\omega
 =
 0,
-\]
+$$
 
 it follows that
 
-\[
-K^3
-=
--\theta^2K.
-\]
+$$
+K^3=-\theta^2K.
+$$
 
-This identity implies
+Therefore,
 
-\[
+$$
 K^4=-\theta^2K^2,
-\]
+$$
 
-\[
+$$
 K^5=\theta^4K,
-\]
+$$
 
-\[
-K^6=\theta^4K^2,
-\]
-
-and so on.
-
-Every power collapses back to either \(K\) or \(K^2\).
+and every higher power reduces to either $K$ or $K^2$.
 
 ---
 
-## Splitting the exponential
+## Step 3
 
-Odd powers become
+Collect odd powers,
 
-\[
-K
-\left(
-1
--
-\frac{\theta^2}{3!}
+$$
+\frac{K}{1!}
 +
-\frac{\theta^4}{5!}
--
-\cdots
-\right)
+\frac{K^3}{3!}
++
+\frac{K^5}{5!}
++\cdots
 =
 \frac{\sin\theta}{\theta}K.
-\]
+$$
 
-Even powers become
+Collect even powers,
 
-\[
-K^2
-\left(
-\frac1{2!}
--
-\frac{\theta^2}{4!}
+$$
+\frac{K^2}{2!}
 +
-\frac{\theta^4}{6!}
--
-\cdots
-\right)
+\frac{K^4}{4!}
++
+\frac{K^6}{6!}
++\cdots
 =
 \frac{1-\cos\theta}{\theta^2}K^2.
-\]
+$$
 
----
+Therefore,
 
-## Rodrigues' Formula
-
-Combining both series,
-
-\[
-\boxed{
+$$
 R
 =
 I
 +
 \frac{\sin\theta}{\theta}K
 +
-\frac{1-\cos\theta}{\theta^2}K^2
-}
-\]
+\frac{1-\cos\theta}{\theta^2}K^2.
+$$
+
+This is Rodrigues' rotation formula.
 
 ---
 
 ## Tests
 
-- \(RR^T=I\)
-- \(\det(R)=1\)
+- Orthogonality
+
+$$
+RR^T=I
+$$
+
+- Determinant
+
+$$
+\det(R)=1
+$$
+
 - Compare against
 
 ```python
 Rotation.from_rotvec(w).as_matrix()
 ```
 
-for many random rotation vectors.
-
 ---
 
-# 3. Logarithm Map
+# Logarithm Map
 
-The logarithm map inverts Rodrigues' formula.
+The trace satisfies
 
----
-
-## Recovering the angle
-
-Since
-
-\[
-\operatorname{tr}(K)=0,
-\]
-
-and
-
-\[
-\operatorname{tr}(K^2)
-=
--2\theta^2,
-\]
-
-Rodrigues' formula gives
-
-\[
+$$
 \operatorname{tr}(R)
 =
-1
-+
-2\cos\theta.
-\]
+1+2\cos\theta.
+$$
 
 Therefore,
 
-\[
-\boxed{
+$$
 \theta
 =
-\arccos
-\left(
+\arccos\left(
 \frac{\operatorname{tr}(R)-1}{2}
-\right)
-}
-\]
+\right).
+$$
 
----
+The antisymmetric part gives
 
-## Recovering the axis
-
-Transpose Rodrigues' formula,
-
-\[
-R^T
-=
-I
--
-\frac{\sin\theta}{\theta}K
-+
-\frac{1-\cos\theta}{\theta^2}K^2.
-\]
-
-Subtract,
-
-\[
+$$
 R-R^T
 =
 \frac{2\sin\theta}{\theta}K.
-\]
+$$
 
-Hence,
+Hence
 
-\[
+$$
 K
 =
 \frac{\theta}{2\sin\theta}
 (R-R^T).
-\]
+$$
 
 Finally,
 
-\[
-\boxed{
+$$
 \omega
 =
 \frac{\theta}{2\sin\theta}
-\operatorname{vee}(R-R^T)
-}
-\]
+\,
+\mathrm{vee}(R-R^T).
+$$
 
 ---
 
 ## Tests
 
-Round-trip:
-
 ```python
-log_so3(exp_so3(w))
+assert np.allclose(log_so3(exp_so3(w)), w)
+assert np.allclose(exp_so3(log_so3(R)), R)
 ```
 
-should recover
+for rotations satisfying
 
-```python
-w
-```
-
-for
-
-\[
+$$
 \|\omega\|<\pi.
-\]
-
-Likewise,
-
-```python
-exp_so3(log_so3(R))
-```
-
-should recover the original rotation matrix.
-
-The restriction
-
-\[
-\|\omega\|<\pi
-\]
-
-exists because rotations by
-
-\[
-(\theta,\hat u)
-\]
-
-and
-
-\[
-(-\theta,-\hat u)
-\]
-
-represent the same element of SO(3) once the rotation angle exceeds π. Consequently, the logarithm is no longer single-valued.
+$$
 
 ---
 
-# Small-Angle Numerical Stability
+# Small-Angle Approximation
 
-The exponential map contains
+Direct evaluation becomes numerically unstable near zero.
 
-\[
-\frac{\sin\theta}{\theta},
-\qquad
-\frac{1-\cos\theta}{\theta^2}.
-\]
+Instead use
 
-Analytically,
-
-\[
-\frac{\sin\theta}{\theta}\rightarrow1,
-\]
-
-\[
-\frac{1-\cos\theta}{\theta^2}\rightarrow\frac12.
-\]
-
-The problem is numerical.
-
-For
-
-\[
-\theta\approx10^{-8},
-\]
-
-double-precision arithmetic rounds
-
-```python
-np.cos(theta)
-```
-
-to exactly
-
-```python
-1.0
-```
-
-making
-
-```python
-1 - np.cos(theta)
-```
-
-equal to zero.
-
-This is catastrophic cancellation.
-
----
-
-## Taylor Approximation
-
-For sufficiently small angles,
-
-\[
+$$
 \frac{\sin\theta}{\theta}
 \approx
 1
@@ -487,9 +350,11 @@ For sufficiently small angles,
 \frac{\theta^2}{6}
 +
 \frac{\theta^4}{120},
-\]
+$$
 
-\[
+and
+
+$$
 \frac{1-\cos\theta}{\theta^2}
 \approx
 \frac12
@@ -497,60 +362,25 @@ For sufficiently small angles,
 \frac{\theta^2}{24}
 +
 \frac{\theta^4}{720}.
-\]
-
-The implementation switches to these series below a threshold (e.g. \(10^{-4}\)).
+$$
 
 Similarly,
 
-\[
+$$
 \frac{\theta}{2\sin\theta}
-\]
+$$
 
-in the logarithm map has a removable singularity at zero and is handled with its own Taylor expansion.
-
-A separate numerical issue occurs near
-
-\[
-\theta=\pi,
-\]
-
-where the recovered axis becomes ill-conditioned because
-
-\[
-\sin\theta\rightarrow0.
-\]
-
-Handling this robustly typically requires specialized axis extraction methods (e.g. Shepperd's algorithm), which are outside the scope of this implementation.
+requires its own Taylor expansion inside `log_so3()`.
 
 ---
 
 # Validation
 
-The implementation is validated by:
+The implementation is validated by
 
-- Analytical identities
-- Orthogonality checks
-- Determinant checks
-- Round-trip consistency
-- Comparison against SciPy's `Rotation` implementation
-- Small-angle continuity tests across
-
-```
-1e-10
-1e-8
-1e-6
-1e-4
-1e-2
-```
-
-ensuring no discontinuity at the Taylor-series threshold.
-
----
-
-# References
-
-- Ethan Eade, *Lie Groups for 2D and 3D Transformations*
-- Timothy D. Barfoot, *State Estimation for Robotics*
-- Joan Solà, *Quaternion Kinematics for the Error-State Kalman Filter*
-- Sophus Lie group formulations for SO(3)
+- `hat` / `vee` inverse tests
+- Orthogonality
+- Determinant
+- Round-trip tests
+- SciPy comparison
+- Small-angle continuity
