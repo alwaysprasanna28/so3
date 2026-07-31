@@ -60,11 +60,11 @@ $$\mathfrak{so}(3) = \{ K \in \mathbb{R}^{3 \times 3} \mid K^T = -K \}$$
 
 The hat operator converts a vector into a skew-symmetric matrix. Given
 
-$$\omega = \begin{bmatrix} \omega_x \\ \omega_y \\ \omega_z \end{bmatrix}$$
+$$\omega = \begin{bmatrix} \omega_x \\\\ \omega_y \\\\ \omega_z \end{bmatrix}$$
 
 define
 
-$$\hat{\omega} = \begin{bmatrix} 0 & -\omega_z & \omega_y \\ \omega_z & 0 & -\omega_x \\ -\omega_y & \omega_x & 0 \end{bmatrix}$$
+$$\hat{\omega} = \begin{bmatrix} 0 & -\omega_z & \omega_y \\\\ \omega_z & 0 & -\omega_x \\\\ -\omega_y & \omega_x & 0 \end{bmatrix}$$
 
 It satisfies
 
