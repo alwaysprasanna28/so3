@@ -11,3 +11,9 @@ def hat(w):
     ])
 
 
+def vee(H):
+    wx,wy,wz = -H[1,2], H[0,2], -H[0,1]
+    return np.array([wx,wy,wz])
+
+
+
