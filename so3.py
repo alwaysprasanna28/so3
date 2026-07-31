@@ -16,4 +16,12 @@ def vee(H):
     return np.array([wx,wy,wz])
 
 
+def exp_so3(w):
+    theta = np.linalg.norm(w)
+    K  = hat(w)
+    K2 = K @ K
+    I = np.eye(3)
+
+    return I
+
 

@@ -1,5 +1,5 @@
 import numpy as np
-from so3 import hat,vee
+from so3 import hat,vee, exp_so3
 
 
 class TestHat:
@@ -30,5 +30,14 @@ class TestVee:
         assert np.allclose(
                 hat(vee(H)), H
             )
-    
+
+
+class TestExpSO3:
+    def test_zero_rotation(self):
+        R = exp_so3(np.zeros(3))
+
+        assert np.allclose(R, np.eye(3))
+
+
+
 
