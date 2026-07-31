@@ -21,7 +21,15 @@ def exp_so3(w):
     K  = hat(w)
     K2 = K @ K
     I = np.eye(3)
+    if theta < 1e-4:
+        t2 = theta * theta  
 
-    return I
+        A = 1 - t2 / 6 + t2 * t2 / 120
+        B = 0.5 - t2 / 24 + t2 * t2 / 720
+    else:
+        A = np.sin(theta) /theta
+        B = (1 - np.cos(theta)) / theta**2
+
+    return I + A * K + B * K2
 
 

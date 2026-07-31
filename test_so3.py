@@ -1,6 +1,6 @@
 import numpy as np
 from so3 import hat,vee, exp_so3
-
+from scipy.spatial.transform import  Rotation
 
 class TestHat:
 
@@ -37,6 +37,40 @@ class TestExpSO3:
         R = exp_so3(np.zeros(3))
 
         assert np.allclose(R, np.eye(3))
+
+    def test_orthogonal(self):
+        w = np.array([0.3, -0.5, 1.2])
+        R = exp_so3(w)
+
+        assert np.allclose(
+            R @ R.T,
+            np.eye(3),
+            atol = 1e-10
+        )
+
+    def test_determinant(self):
+        w = np.array([0.3,0.7,-0.345])
+        R = exp_so3(w)
+        assert np.allclose(
+            np.linalg.det(R),
+            1.0,
+        )
+
+    def test_against_scipy(self):
+        rng = np.random.default_rng(0)
+
+        for _ in range(100):
+            w = rng.normal(size=3)
+
+            R_expected = Rotation.from_rotvec(w).as_matrix()
+            R_actual  = exp_so3(w)   
+
+            assert np.allclose(
+                R_actual,
+                R_expected,
+                atol = 1e-10
+            )
+            
 
 
 
