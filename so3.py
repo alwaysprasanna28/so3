@@ -32,4 +32,22 @@ def exp_so3(w):
 
     return I + A * K + B * K2
 
+def log_so3(R):
+    trace = np.trace(R)
+    cos_theta = (trace - 1) / 2
+    theta = np.arccos(cos_theta)
+
+    S = R - R.T
+    
+
+    if theta < 1e-4:
+        t2 = theta * theta
+        scale = 0.5 + t2/ 12 + 7*t2*t2/720
+
+    else:
+        scale = (theta / (2 * np.sin(theta))) 
+
+    K = scale * S
+    w = vee(K) 
+    return w
 

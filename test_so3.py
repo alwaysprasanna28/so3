@@ -1,5 +1,5 @@
 import numpy as np
-from so3 import hat,vee, exp_so3
+from so3 import hat,vee, exp_so3, log_so3
 from scipy.spatial.transform import  Rotation
 
 class TestHat:
@@ -74,4 +74,15 @@ class TestExpSO3:
 
 
 
+class TestLogSO3:
 
+    def test_identity(self):
+        w = np.array([0.3,0.4,-0.345])
+        R = exp_so3(w)
+        w2 = log_so3(R)
+
+        assert np.allclose(
+            w2,
+            w,
+            atol = 1e-10
+        )
